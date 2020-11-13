@@ -1,0 +1,70 @@
+package com.algaworks.algafood.api.controller;
+
+import com.algaworks.algafood.api.dto.FormaPagamentoDTO;
+import com.algaworks.algafood.api.dto.input.FormaPagamentoInput;
+import com.algaworks.algafood.api.mapper.FormaPagamentoMapper;
+import com.algaworks.algafood.domain.model.FormaPagamento;
+import com.algaworks.algafood.domain.repository.FormaPagamentoRepository;
+import com.algaworks.algafood.domain.service.FormaPagamentoService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+import java.util.List;
+
+@RestController
+@RequestMapping("/formas-pagamento")
+public class FormaPagamentoController {
+
+    @Autowired
+    private FormaPagamentoRepository repository;
+
+    @Autowired
+    private FormaPagamentoService service;
+
+    @Autowired
+    private FormaPagamentoMapper mapper;
+
+    @GetMapping
+    public List<FormaPagamentoDTO> listar() {
+        List<FormaPagamento> todasFormasPagamentos = repository.findAll();
+
+        return mapper.toDTO(todasFormasPagamentos);
+    }
+
+    @GetMapping("/{id}")
+    public FormaPagamentoDTO buscar(@PathVariable Long id) {
+        FormaPagamento formaPagamento = service.buscarOuFalhar(id);
+
+        return mapper.toDTO(formaPagamento);
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public FormaPagamentoDTO adicionar(@RequestBody @Valid FormaPagamentoInput formaPagamentoInput) {
+        FormaPagamento formaPagamento = mapper.toDomainObject(formaPagamentoInput);
+
+        formaPagamento = service.salvar(formaPagamento);
+
+        return mapper.toDTO(formaPagamento);
+    }
+
+    @PutMapping("/{id}")
+    public FormaPagamentoDTO atualizar(@PathVariable Long id,
+                                       @RequestBody @Valid FormaPagamentoInput formaPagamentoInput) {
+        FormaPagamento formaPagamentoAtual = service.buscarOuFalhar(id);
+
+        mapper.copyToDomainObject(formaPagamentoInput, formaPagamentoAtual);
+
+        formaPagamentoAtual = service.salvar(formaPagamentoAtual);
+
+        return mapper.toDTO(formaPagamentoAtual);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void remover(@PathVariable Long id) {
+        service.excluir(id);
+    }
+}
