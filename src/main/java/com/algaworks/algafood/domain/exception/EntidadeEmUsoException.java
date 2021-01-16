@@ -2,7 +2,9 @@ package com.algaworks.algafood.domain.exception;
 
 public class EntidadeEmUsoException extends NegocioException {
 
-    public EntidadeEmUsoException(final String mensagem) {
+	private static final long serialVersionUID = 1L;
+
+	public EntidadeEmUsoException(final String mensagem) {
         super(mensagem);
     }
 
