@@ -40,6 +40,7 @@ public class CatalogoFotoProdutoService {
 
         FotoStorageService.NovaFoto novaFoto = FotoStorageService.NovaFoto.builder()
                 .nomeArquivo(foto.getNomeArquivo())
+                .contentType(foto.getContentType())
                 .inputStream(dadosArquivo)
                 .build();
 
@@ -55,7 +56,7 @@ public class CatalogoFotoProdutoService {
     }
 
     @Transactional
-    public void excluir(Long restauranteId, Long produtoId){
+    public void excluir(Long restauranteId, Long produtoId) {
         FotoProduto foto = buscarOuFalhar(restauranteId, produtoId);
 
         produtoRepository.delete(foto);
