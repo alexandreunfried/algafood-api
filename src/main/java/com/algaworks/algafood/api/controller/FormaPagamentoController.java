@@ -11,8 +11,11 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.filter.ShallowEtagHeaderFilter;
 
 import javax.validation.Valid;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -30,24 +33,58 @@ public class FormaPagamentoController {
     private FormaPagamentoMapper mapper;
 
     @GetMapping
-    public ResponseEntity<List<FormaPagamentoDTO>> listar() {
+    public ResponseEntity<List<FormaPagamentoDTO>> listar(ServletWebRequest request) {
+        ShallowEtagHeaderFilter.disableContentCaching(request.getRequest());
+
+        String eTag = "0";
+
+        OffsetDateTime dataUltimaAtualizacao = repository.getDataUltimaAtualizacao();
+
+        if (dataUltimaAtualizacao != null) {
+            eTag = String.valueOf(dataUltimaAtualizacao.toEpochSecond());
+        }
+
+        if (request.checkNotModified(eTag)) {
+            return null;
+        }
+
         List<FormaPagamento> todasFormasPagamentos = repository.findAll();
 
         List<FormaPagamentoDTO> formasPagamentosDTO = mapper.toDTO(todasFormasPagamentos);
 
         return ResponseEntity.ok()
-                .cacheControl(CacheControl.maxAge(10, TimeUnit.SECONDS))
+//                .cacheControl(CacheControl.maxAge(10, TimeUnit.SECONDS))
+//                .cacheControl(CacheControl.maxAge(10, TimeUnit.SECONDS).cachePrivate())
+                .cacheControl(CacheControl.maxAge(10, TimeUnit.SECONDS).cachePublic())
+//                .cacheControl(CacheControl.noCache())
+//                .cacheControl(CacheControl.noStore())
+                .eTag(eTag)
                 .body(formasPagamentosDTO);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<FormaPagamentoDTO> buscar(@PathVariable Long id) {
+    public ResponseEntity<FormaPagamentoDTO> buscar(@PathVariable Long id, ServletWebRequest request) {
+        ShallowEtagHeaderFilter.disableContentCaching(request.getRequest());
+
+        String eTag = "0";
+
+        OffsetDateTime dataUltimaAtualizacao = repository.getDataAtualizacaoById(id);
+
+        if (dataUltimaAtualizacao != null) {
+            eTag = String.valueOf(dataUltimaAtualizacao.toEpochSecond());
+        }
+
+        if (request.checkNotModified(eTag)) {
+            return null;
+        }
+
         FormaPagamento formaPagamento = service.buscarOuFalhar(id);
 
         FormaPagamentoDTO formaPagamentoDTO = mapper.toDTO(formaPagamento);
 
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.maxAge(10, TimeUnit.SECONDS))
+                .eTag(eTag)
                 .body(formaPagamentoDTO);
     }
 
